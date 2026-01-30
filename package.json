@@ -1,0 +1,19 @@
+{
+  "name": "telegram-recipe-analyzer",
+  "version": "1.0.0",
+  "description": "Telegram Mini App for recipe analysis",
+  "scripts": {
+    "build": "node build.js"
+  },
+  "keywords": [
+    "telegram",
+    "mini-app",
+    "recipe",
+    "analyzer"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "node-telegram-bot-api": "^0.66.0"
+  }
+}

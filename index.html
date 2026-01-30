@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Vitwi</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Заголовок -->
+        <header class="header">
+            <div class="header-top">
+                <div class="header-content">
+                    <h1>Vitwi</h1>
+                    <p class="subtitle">Распознай рецепт и получи полную информацию о блюде</p>
+                </div>
+                <button class="theme-toggle-btn" id="theme-toggle" title="Изменить тему">
+                    <span class="theme-icon">🎨</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Модальное окно выбора темы -->
+        <div id="theme-modal" class="theme-modal hidden">
+            <div class="theme-modal-overlay"></div>
+            <div class="theme-modal-content">
+                <div class="theme-modal-header">
+                    <h3>Выберите тему</h3>
+                    <button class="theme-modal-close" id="theme-modal-close">✕</button>
+                </div>
+                <div class="themes-grid" id="themes-grid">
+                    <!-- Темы будут добавлены через JavaScript -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Вкладки для выбора способа ввода -->
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="input">✍️ Ввод рецепта</button>
+            <button class="tab-btn" data-tab="vita">🤖 Вита</button>
+            <button class="tab-btn" data-tab="saved">💾 Сохраненные</button>
+            <button class="tab-btn" data-tab="cart">🛒 Корзина</button>
+        </div>
+
+        <!-- Ввод рецепта -->
+        <div class="tab-content active" id="input-tab">
+            <div class="input-section">
+                <textarea 
+                    id="recipe-input" 
+                    class="text-input" 
+                    placeholder="Введите или вставьте текст рецепта здесь..."
+                    rows="8"
+                ></textarea>
+                <button class="btn btn-primary" id="analyze-recipe">Анализировать</button>
+            </div>
+
+            <!-- Индикатор загрузки -->
+            <div id="loading" class="loading hidden">
+                <div class="spinner"></div>
+                <p>Анализирую рецепт...</p>
+            </div>
+
+            <!-- Результаты анализа -->
+            <div id="results" class="results hidden">
+            <!-- Название блюда -->
+            <div class="result-card">
+                <h2 id="dish-name" class="dish-name"></h2>
+                <div class="recipe-meta">
+                    <div class="meta-item" id="difficulty-meta">
+                        <span class="meta-label">Сложность:</span>
+                        <span class="meta-value" id="difficulty-value">-</span>
+                    </div>
+                    <div class="meta-item" id="time-meta">
+                        <span class="meta-label">Время готовки:</span>
+                        <span class="meta-value" id="time-value">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- БЖУ и калории -->
+            <div class="nutrition-card">
+                <h3>📊 Пищевая ценность</h3>
+                
+                <!-- На 100 грамм -->
+                <div class="nutrition-section">
+                    <h4 class="nutrition-section-title">На 100 грамм:</h4>
+                    <div class="nutrition-grid">
+                        <div class="nutrition-item">
+                            <div class="nutrition-value" id="calories-100g">-</div>
+                            <div class="nutrition-label">ккал</div>
+                        </div>
+                        <div class="nutrition-item">
+                            <div class="nutrition-value" id="proteins-100g">-</div>
+                            <div class="nutrition-label">Белки (г)</div>
+                        </div>
+                        <div class="nutrition-item">
+                            <div class="nutrition-value" id="fats-100g">-</div>
+                            <div class="nutrition-label">Жиры (г)</div>
+                        </div>
+                        <div class="nutrition-item">
+                            <div class="nutrition-value" id="carbs-100g">-</div>
+                            <div class="nutrition-label">Углеводы (г)</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- На порцию -->
+                <div class="nutrition-section">
+                    <h4 class="nutrition-section-title" id="serving-title">На порцию:</h4>
+                    <div class="nutrition-grid">
+                        <div class="nutrition-item">
+                            <div class="nutrition-value" id="calories-serving">-</div>
+                            <div class="nutrition-label">ккал</div>
+                        </div>
+                        <div class="nutrition-item">
+                            <div class="nutrition-value" id="proteins-serving">-</div>
+                            <div class="nutrition-label">Белки (г)</div>
+                        </div>
+                        <div class="nutrition-item">
+                            <div class="nutrition-value" id="fats-serving">-</div>
+                            <div class="nutrition-label">Жиры (г)</div>
+                        </div>
+                        <div class="nutrition-item">
+                            <div class="nutrition-value" id="carbs-serving">-</div>
+                            <div class="nutrition-label">Углеводы (г)</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ингредиенты -->
+            <div class="result-card">
+                <div class="ingredients-header">
+                    <h3>🥘 Ингредиенты</h3>
+                    <button class="btn btn-add-all" id="add-all-ingredients">➕ Добавить все в корзину</button>
+                </div>
+                <ul id="ingredients-list" class="ingredients-list"></ul>
+            </div>
+
+            <!-- Пошаговая инструкция -->
+            <div class="result-card">
+                <h3>👨‍🍳 Пошаговая инструкция</h3>
+                <div id="instructions" class="instructions"></div>
+            </div>
+
+            <!-- Кнопки действий -->
+            <div class="action-buttons">
+                <button class="btn btn-save" id="save-recipe">💾 Сохранить рецепт</button>
+                <button class="btn btn-secondary" id="new-analysis">Новый анализ</button>
+            </div>
+            </div>
+        </div>
+
+        <!-- Вита - ИИ агент -->
+        <div class="tab-content" id="vita-tab">
+            <div class="vita-section">
+                <div class="vita-header">
+                    <div class="vita-avatar" id="vita-avatar-container">
+                        <img src="images/vita-avatar.jpg" alt="Вита" class="vita-avatar-img" id="vita-avatar-img" onerror="handleVitaAvatarError()">
+                    </div>
+                    <div class="vita-info">
+                        <h3>Вита</h3>
+                        <p class="vita-subtitle">Ваш персональный помощник по рецептам</p>
+                    </div>
+                </div>
+                
+                <div class="vita-input-section">
+                    <textarea 
+                        id="vita-query" 
+                        class="text-input" 
+                        placeholder="Опишите, что вы хотите приготовить... Например: 'Легкий завтрак на 20 минут с овощами' или 'Сытный обед с мясом, готовка до часа'"
+                        rows="4"
+                    ></textarea>
+                    <button class="btn btn-primary" id="vita-ask">Спросить Виту</button>
+                </div>
+
+                <!-- Индикатор загрузки Виты -->
+                <div id="vita-loading" class="loading hidden">
+                    <div class="spinner"></div>
+                    <p>Вита подбирает рецепты...</p>
+                </div>
+
+                <!-- Результаты от Виты -->
+                <div id="vita-results" class="vita-results hidden"></div>
+            </div>
+        </div>
+
+        <!-- Сохраненные рецепты -->
+        <div class="tab-content" id="saved-tab">
+            <div class="saved-recipes-section">
+                <div class="saved-search-container">
+                    <input 
+                        type="text" 
+                        id="tag-search" 
+                        class="tag-search-input" 
+                        placeholder="🔍 Поиск по тегам..."
+                        autocomplete="off"
+                    />
+                </div>
+                <div id="saved-recipes-list" class="saved-recipes-list">
+                    <p class="empty-message">Нет сохраненных рецептов</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Корзина продуктов -->
+        <div class="tab-content" id="cart-tab">
+            <div class="cart-section">
+                <div class="cart-header">
+                    <h3>🛒 Корзина продуктов</h3>
+                    <button class="btn btn-clear" id="clear-cart">Очистить корзину</button>
+                </div>
+                <div id="cart-list" class="cart-list">
+                    <p class="empty-message">Корзина пуста</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ошибка -->
+        <div id="error" class="error hidden">
+            <p id="error-message"></p>
+            <button class="btn btn-secondary" onclick="hideError()">Понятно</button>
+        </div>
+    </div>
+
+    <script type="module" src="src/app.js"></script>
+    <script>
+        // Обработка ошибки загрузки аватарки Виты
+        function handleVitaAvatarError() {
+            const container = document.getElementById('vita-avatar-container');
+            const img = document.getElementById('vita-avatar-img');
+            
+            if (container && img) {
+                // Пробуем другие форматы
+                const formats = ['png', 'jpeg', 'webp'];
+                const currentSrc = img.src;
+                const basePath = currentSrc.substring(0, currentSrc.lastIndexOf('.'));
+                let formatIndex = 0;
+                let attempts = 0;
+                
+                function tryNextFormat() {
+                    attempts++;
+                    if (formatIndex < formats.length && attempts <= formats.length) {
+                        img.src = basePath + '.' + formats[formatIndex];
+                        formatIndex++;
+                    } else {
+                        // Если все форматы не загрузились, показываем эмодзи
+                        if (img && img.parentNode) {
+                            img.style.display = 'none';
+                        }
+                        container.innerHTML = '🤖';
+                        container.style.fontSize = '48px';
+                        container.style.display = 'flex';
+                        container.style.alignItems = 'center';
+                        container.style.justifyContent = 'center';
+                    }
+                }
+                
+                // Удаляем старый обработчик и добавляем новый
+                img.onerror = null;
+                img.onerror = tryNextFormat;
+                tryNextFormat();
+            }
+        }
+    </script>
+</body>
+</html>
+
